@@ -1,0 +1,27 @@
+apply plugin: 'application'
+
+application {
+  mainClass = 'br.mackenzie.lwjgl3.Lwjgl3Launcher'
+}
+
+dependencies {
+  implementation project(':core')
+  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+}
+
+// Executa a partir da pasta assets, para que os arquivos do jogo sejam encontrados.
+tasks.named('run') {
+  workingDir = rootProject.file('assets')
+}
+
+// Gera um .jar executavel com tudo dentro: ./gradlew lwjgl3:jar
+jar {
+  archiveFileName = 'JogoHandgrip.jar'
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  dependsOn configurations.runtimeClasspath
+  from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+  from rootProject.file('assets')
+  exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
+  manifest { attributes 'Main-Class': application.mainClass }
+}

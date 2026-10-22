@@ -1,32 +1,41 @@
-package br.mackenzie.input;
+# Jogo Handgrip
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+Jogo sério para reabilitação da força de preensão da mão, feito com libGDX e controlado
+por um handgrip adaptado ligado a um Arduino pela porta serial.
 
-/**
- * Extrai o valor numérico de uma linha enviada pelo Arduino.
- * Aceita linhas como "512", "Forca: 512" ou "Sentido: -1" (exemplo do professor).
- */
-public final class SerialLineParser {
-    private static final Pattern NUMBER = Pattern.compile("-?\\d+(?:[.,]\\d+)?");
+Autora: Beatriz Soares — disciplina de Jogos Digitais.
 
-    private SerialLineParser() {
-    }
+## Como executar
 
-    /** Retorna o último número da linha, ou null se não houver nenhum. */
-    public static Float parse(String line) {
-        if (line == null) return null;
-        Matcher matcher = NUMBER.matcher(line);
-        String last = null;
-        while (matcher.find()) last = matcher.group();
-        if (last == null) return null;
-        return Float.parseFloat(last.replace(',', '.'));
-    }
+Requer Java 17 ou superior.
 
-    /** Converte o valor bruto para a faixa 0..1. */
-    public static float normalize(float raw, float rawMin, float rawMax) {
-        if (rawMax == rawMin) return 0f;
-        float value = (raw - rawMin) / (rawMax - rawMin);
-        return Math.max(0f, Math.min(1f, value));
-    }
-}
+```bash
+./gradlew lwjgl3:run                      # com o handgrip
+cd # sem o dispositivo (segure ESPAÇO)
+./gradlew lwjgl3:jar                      # gera lwjgl3/build/libs/JogoHandgrip.jar
+```
+
+No Windows use `gradlew.bat` no lugar de `./gradlew`. Para listar as portas seriais
+disponíveis, execute a classe `br.mackenzie.input.SerialPortLister`.
+
+## Configuração do handgrip
+
+Edite `assets/controle.properties` (ou coloque uma cópia ao lado do `.jar`):
+
+| Chave       | Significado                                                       |
+|-------------|-------------------------------------------------------------------|
+| `porta`     | Porta serial (`COM3`, `/dev/ttyUSB0`...) ou `auto`                |
+| `baud`      | Velocidade da serial (padrão 9600)                                |
+| `forcaMin`  | Valor enviado pelo Arduino com a mão solta                        |
+| `forcaMax`  | Valor enviado com a força máxima desejada                         |
+| `simulador` | `true` para usar o teclado no lugar do handgrip (só para testes)  |
+
+O Arduino deve enviar uma linha por leitura contendo um número, por exemplo `512` ou
+`Forca: 512`. Um esboço está em `firmware/handgrip/handgrip.ino`.
+
+## Estrutura
+
+- `core/.../ReabilitacaoGame.java` — classe principal e recursos compartilhados.
+- `core/.../screens/` — menu principal e tela de jogo (com pausa e reinício).
+- `core/.../input/` — leitura serial do handgrip, simulador e configuração.
+- `lwjgl3/` — inicializador desktop.
