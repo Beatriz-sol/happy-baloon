@@ -1,0 +1,9 @@
+# Configuração do handgrip
+# porta: nome da porta serial (ex.: COM3 no Windows, /dev/ttyUSB0 no Linux) ou "auto"
+porta=auto
+baud=9600
+# Valor que o Arduino envia com a mão solta e com a força máxima
+forcaMin=0
+forcaMax=1023
+# true = controlar pelo teclado (ESPAÇO) para testar sem o dispositivo
+simulador=false
