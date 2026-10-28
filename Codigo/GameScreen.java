@@ -2,6 +2,7 @@ package br.mackenzie.screens;
 
 import br.mackenzie.ReabilitacaoGame;
 import br.mackenzie.world.Balloon;
+import br.mackenzie.world.LevelConfig;
 import br.mackenzie.world.ParallaxBackground;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -18,12 +19,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
- * Tela de jogo: a altura do balão segue a força do aperto.
- * Nesta primeira versão há uma única faixa-alvo fixa; as fases vêm nos próximos commits.
+ * Tela de jogo: a altura do balão segue a força do aperto e o jogador
+ * tenta manter o balão dentro das faixas-alvo da fase.
  */
 public class GameScreen extends ScreenAdapter {
     private static final float W = ReabilitacaoGame.WORLD_WIDTH;
@@ -32,22 +34,23 @@ public class GameScreen extends ScreenAdapter {
     private static final float BALLOON_X = 170f;
     private static final float BALLOON_MIN_Y = ParallaxBackground.GROUND_HEIGHT - 4f;
     private static final float BALLOON_MAX_Y = H - Balloon.HEIGHT - 50f;
-    private static final float SCROLL_SPEED = 120f;
-
-    // Faixa de força-alvo (0..1)
-    private static final float TARGET_MIN = 0.4f;
-    private static final float TARGET_MAX = 0.6f;
+    private static final float BALLOON_CENTER_X = BALLOON_X + Balloon.WIDTH / 2f;
+    private static final float BAND_GAP = 6f; // espaço entre faixas vizinhas
 
     private final ReabilitacaoGame game;
     private final FitViewport viewport;
     private final Stage stage;
     private final Label hudLabel;
+    private final Label messageLabel;
     private final Table pauseTable;
     private final Texture balloonTexture;
     private final Balloon balloon;
     private final ParallaxBackground background;
+    private final LevelConfig level;
 
     private boolean paused;
+    private boolean finished;
+    private float distance;
     private float elapsedTime;
     private float timeInZone;
 
@@ -60,10 +63,16 @@ public class GameScreen extends ScreenAdapter {
         balloonTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         balloon = new Balloon(balloonTexture, BALLOON_X, BALLOON_MIN_Y, BALLOON_MAX_Y);
         background = new ParallaxBackground(W, H);
+        level = LevelConfig.level1();
 
         hudLabel = new Label("", game.skin);
         hudLabel.setPosition(15, H - 35);
         stage.addActor(hudLabel);
+
+        messageLabel = new Label("", game.skin, "title");
+        messageLabel.setAlignment(Align.center);
+        messageLabel.setBounds(0, H / 2f, W, 60);
+        stage.addActor(messageLabel);
 
         TextButton pauseButton = new TextButton("Pausar", game.skin);
         pauseButton.setBounds(W - 135, H - 50, 120, 40);
@@ -122,6 +131,9 @@ public class GameScreen extends ScreenAdapter {
     private void restart() {
         balloon.reset();
         background.reset();
+        distance = 0f;
+        finished = false;
+        messageLabel.setText("");
         elapsedTime = 0f;
         timeInZone = 0f;
         setPaused(false);
@@ -159,14 +171,24 @@ public class GameScreen extends ScreenAdapter {
     private void update(float delta) {
         float force = game.grip.getForce();
         balloon.update(force, delta);
-        background.update(delta, SCROLL_SPEED);
+        if (finished) return;
 
+        background.update(delta, level.speed);
+        distance += level.speed * delta;
         elapsedTime += delta;
-        if (force >= TARGET_MIN && force <= TARGET_MAX) timeInZone += delta;
+
+        int segment = level.segmentAt(distance);
+        if (segment < 0) {
+            finished = true;
+            messageLabel.setText("Percurso concluído!");
+            return;
+        }
+        if (level.segments[segment].contains(force)) timeInZone += delta;
 
         int zonePercent = elapsedTime > 0 ? Math.round(100f * timeInZone / elapsedTime) : 0;
-        hudLabel.setText(String.format("Força: %d%%   Na faixa-alvo: %d%%   Tempo: %ds",
-            Math.round(force * 100), zonePercent, (int) elapsedTime));
+        int progress = Math.round(100f * distance / level.totalLength());
+        hudLabel.setText(String.format("%s  %d%%   Força: %d%%   Na faixa-alvo: %d%%",
+            level.name, progress, Math.round(force * 100), zonePercent));
     }
 
     private void draw() {
@@ -183,20 +205,34 @@ public class GameScreen extends ScreenAdapter {
         background.drawFar(batch);
         batch.end();
 
-        // Faixa-alvo semitransparente: alturas em que o balão fica com a força certa
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        shapes.begin(ShapeRenderer.ShapeType.Filled);
-        shapes.setColor(1f, 1f, 1f, 0.3f);
-        float zoneBottom = balloon.heightFor(TARGET_MIN);
-        float zoneTop = balloon.heightFor(TARGET_MAX) + Balloon.HEIGHT;
-        shapes.rect(0, zoneBottom, W, zoneTop - zoneBottom);
-        shapes.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
+        drawTargetBands(shapes);
 
         batch.begin();
         background.drawGround(batch);
         balloon.draw(batch);
         batch.end();
+    }
+
+    // Faixas-alvo semitransparentes: alturas em que o balão fica com a força certa.
+    // Elas andam junto com o cenário, então o jogador vê a próxima faixa chegando.
+    private void drawTargetBands(ShapeRenderer shapes) {
+        int current = level.segmentAt(distance);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        shapes.begin(ShapeRenderer.ShapeType.Filled);
+        float start = BALLOON_CENTER_X - distance;
+        for (int i = 0; i < level.segments.length; i++) {
+            float length = level.lengthOf(i);
+            if (start < W && start + length > 0) {
+                LevelConfig.Segment segment = level.segments[i];
+                float bottom = balloon.heightFor(segment.targetMin);
+                float top = balloon.heightFor(segment.targetMax) + Balloon.HEIGHT;
+                shapes.setColor(1f, 1f, 1f, i == current ? 0.4f : 0.2f);
+                shapes.rect(start + BAND_GAP / 2f, bottom, length - BAND_GAP, top - bottom);
+            }
+            start += length;
+        }
+        shapes.end();
+        Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
     @Override
