@@ -1,15 +1,17 @@
 package br.mackenzie.screens;
 
 import br.mackenzie.ReabilitacaoGame;
+import br.mackenzie.world.Balloon;
+import br.mackenzie.world.ParallaxBackground;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -20,18 +22,16 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
- * Tela de jogo: a altura do personagem segue a força do aperto.
+ * Tela de jogo: a altura do balão segue a força do aperto.
  * Nesta primeira versão há uma única faixa-alvo fixa; as fases vêm nos próximos commits.
  */
 public class GameScreen extends ScreenAdapter {
     private static final float W = ReabilitacaoGame.WORLD_WIDTH;
     private static final float H = ReabilitacaoGame.WORLD_HEIGHT;
 
-    private static final float GROUND_Y = 60f;
-    private static final float CEILING_Y = 420f;
-    private static final float PLAYER_X = 200f;
-    private static final float PLAYER_RADIUS = 22f;
-    private static final float FOLLOW_SPEED = 8f; // suavização do movimento
+    private static final float BALLOON_X = 170f;
+    private static final float BALLOON_MIN_Y = ParallaxBackground.GROUND_HEIGHT - 4f;
+    private static final float BALLOON_MAX_Y = H - Balloon.HEIGHT - 50f;
     private static final float SCROLL_SPEED = 120f;
 
     // Faixa de força-alvo (0..1)
@@ -43,10 +43,11 @@ public class GameScreen extends ScreenAdapter {
     private final Stage stage;
     private final Label hudLabel;
     private final Table pauseTable;
+    private final Texture balloonTexture;
+    private final Balloon balloon;
+    private final ParallaxBackground background;
 
     private boolean paused;
-    private float playerY;
-    private float scrollX;
     private float elapsedTime;
     private float timeInZone;
 
@@ -54,6 +55,11 @@ public class GameScreen extends ScreenAdapter {
         this.game = game;
         viewport = new FitViewport(W, H);
         stage = new Stage(new FitViewport(W, H), game.batch);
+
+        balloonTexture = new Texture("balao.png");
+        balloonTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        balloon = new Balloon(balloonTexture, BALLOON_X, BALLOON_MIN_Y, BALLOON_MAX_Y);
+        background = new ParallaxBackground(W, H);
 
         hudLabel = new Label("", game.skin);
         hudLabel.setPosition(15, H - 35);
@@ -114,8 +120,8 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void restart() {
-        playerY = GROUND_Y;
-        scrollX = 0f;
+        balloon.reset();
+        background.reset();
         elapsedTime = 0f;
         timeInZone = 0f;
         setPaused(false);
@@ -152,9 +158,8 @@ public class GameScreen extends ScreenAdapter {
 
     private void update(float delta) {
         float force = game.grip.getForce();
-        float targetY = MathUtils.lerp(GROUND_Y, CEILING_Y, force);
-        playerY += (targetY - playerY) * Math.min(1f, FOLLOW_SPEED * delta);
-        scrollX += SCROLL_SPEED * delta;
+        balloon.update(force, delta);
+        background.update(delta, SCROLL_SPEED);
 
         elapsedTime += delta;
         if (force >= TARGET_MIN && force <= TARGET_MAX) timeInZone += delta;
@@ -165,37 +170,33 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void draw() {
-        ScreenUtils.clear(0.53f, 0.78f, 0.95f, 1f);
+        ScreenUtils.clear(0f, 0f, 0f, 1f);
         viewport.apply();
         ShapeRenderer shapes = game.shapes;
+        SpriteBatch batch = game.batch;
         shapes.setProjectionMatrix(viewport.getCamera().combined);
+        batch.setProjectionMatrix(viewport.getCamera().combined);
 
-        // Faixa-alvo semitransparente
+        background.drawSky(shapes);
+
+        batch.begin();
+        background.drawFar(batch);
+        batch.end();
+
+        // Faixa-alvo semitransparente: alturas em que o balão fica com a força certa
         Gdx.gl.glEnable(GL20.GL_BLEND);
         shapes.begin(ShapeRenderer.ShapeType.Filled);
-        shapes.setColor(1f, 1f, 1f, 0.35f);
-        float zoneBottom = MathUtils.lerp(GROUND_Y, CEILING_Y, TARGET_MIN);
-        float zoneTop = MathUtils.lerp(GROUND_Y, CEILING_Y, TARGET_MAX);
-        shapes.rect(0, zoneBottom - PLAYER_RADIUS, W, zoneTop - zoneBottom + 2 * PLAYER_RADIUS);
+        shapes.setColor(1f, 1f, 1f, 0.3f);
+        float zoneBottom = balloon.heightFor(TARGET_MIN);
+        float zoneTop = balloon.heightFor(TARGET_MAX) + Balloon.HEIGHT;
+        shapes.rect(0, zoneBottom, W, zoneTop - zoneBottom);
         shapes.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
-        shapes.begin(ShapeRenderer.ShapeType.Filled);
-        // Chão com faixas rolando para dar sensação de movimento
-        shapes.setColor(0.35f, 0.65f, 0.3f, 1f);
-        shapes.rect(0, 0, W, GROUND_Y - PLAYER_RADIUS);
-        shapes.setColor(0.3f, 0.55f, 0.25f, 1f);
-        float stripeOffset = scrollX % 80f;
-        for (float x = -stripeOffset; x < W; x += 80f) {
-            shapes.rect(x, 0, 40f, GROUND_Y - PLAYER_RADIUS);
-        }
-
-        // Personagem provisório (será trocado pelo sprite do tema escolhido)
-        shapes.setColor(Color.FIREBRICK);
-        shapes.circle(PLAYER_X, playerY, PLAYER_RADIUS);
-        shapes.setColor(Color.BROWN);
-        shapes.rect(PLAYER_X - 8, playerY - PLAYER_RADIUS - 14, 16, 12);
-        shapes.end();
+        batch.begin();
+        background.drawGround(batch);
+        balloon.draw(batch);
+        batch.end();
     }
 
     @Override
@@ -213,5 +214,7 @@ public class GameScreen extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
+        balloonTexture.dispose();
+        background.dispose();
     }
 }

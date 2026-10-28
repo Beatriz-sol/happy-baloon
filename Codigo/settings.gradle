@@ -1,2 +1,0 @@
-rootProject.name = 'jogo-balao'
-include 'core', 'lwjgl3'
