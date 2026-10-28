@@ -20,7 +20,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
- * Tela de jogo: a altura do personagem segue a força do handgrip.
+ * Tela de jogo: a altura do personagem segue a força do aperto.
  * Nesta primeira versão há uma única faixa-alvo fixa; as fases vêm nos próximos commits.
  */
 public class GameScreen extends ScreenAdapter {
@@ -42,7 +42,6 @@ public class GameScreen extends ScreenAdapter {
     private final FitViewport viewport;
     private final Stage stage;
     private final Label hudLabel;
-    private final Label warningLabel;
     private final Table pauseTable;
 
     private boolean paused;
@@ -59,11 +58,6 @@ public class GameScreen extends ScreenAdapter {
         hudLabel = new Label("", game.skin);
         hudLabel.setPosition(15, H - 35);
         stage.addActor(hudLabel);
-
-        warningLabel = new Label("", game.skin);
-        warningLabel.setColor(Color.ORANGE);
-        warningLabel.setPosition(15, H - 65);
-        stage.addActor(warningLabel);
 
         TextButton pauseButton = new TextButton("Pausar", game.skin);
         pauseButton.setBounds(W - 135, H - 50, 120, 40);
@@ -168,7 +162,6 @@ public class GameScreen extends ScreenAdapter {
         int zonePercent = elapsedTime > 0 ? Math.round(100f * timeInZone / elapsedTime) : 0;
         hudLabel.setText(String.format("Força: %d%%   Na faixa-alvo: %d%%   Tempo: %ds",
             Math.round(force * 100), zonePercent, (int) elapsedTime));
-        warningLabel.setText(game.grip.isConnected() ? "" : "Handgrip: " + game.grip.getStatus());
     }
 
     private void draw() {

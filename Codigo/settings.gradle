@@ -1,2 +1,2 @@
-rootProject.name = 'jogo-handgrip'
+rootProject.name = 'jogo-balao'
 include 'core', 'lwjgl3'

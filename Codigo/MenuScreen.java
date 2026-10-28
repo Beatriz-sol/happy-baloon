@@ -15,7 +15,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
- * Menu principal: iniciar o jogo, sair e testar o handgrip.
+ * Menu principal: iniciar o jogo, sair e testar o aperto.
  */
 public class MenuScreen extends ScreenAdapter {
     private final ReabilitacaoGame game;
@@ -32,9 +32,9 @@ public class MenuScreen extends ScreenAdapter {
 
         TextButton startButton = new TextButton("Iniciar", game.skin);
         TextButton exitButton = new TextButton("Sair", game.skin);
-        statusLabel = new Label("", game.skin);
+        statusLabel = new Label("Segure ESPAÇO para apertar", game.skin);
 
-        table.add(new Label("Jogo Handgrip", game.skin, "title")).padBottom(40).row();
+        table.add(new Label("Jogo do Balão", game.skin, "title")).padBottom(40).row();
         table.add(startButton).width(260).height(55).padBottom(15).row();
         table.add(exitButton).width(260).height(55).padBottom(40).row();
         table.add(statusLabel).row();
@@ -65,7 +65,6 @@ public class MenuScreen extends ScreenAdapter {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0.08f, 0.12f, 0.22f, 1f);
-        statusLabel.setText("Handgrip: " + game.grip.getStatus());
         stage.act(delta);
         stage.draw();
         drawForceBar();

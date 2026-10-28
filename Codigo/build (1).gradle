@@ -17,7 +17,7 @@ tasks.named('run') {
 
 // Gera um .jar executavel com tudo dentro: ./gradlew lwjgl3:jar
 jar {
-  archiveFileName = 'JogoHandgrip.jar'
+  archiveFileName = 'JogoBalao.jar'
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   dependsOn configurations.runtimeClasspath
   from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }

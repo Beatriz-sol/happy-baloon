@@ -1,8 +1,5 @@
-subprojects {
-  apply plugin: 'java'
-  repositories { mavenCentral() }
-  tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    options.release = 17
-  }
+apply plugin: 'java-library'
+
+dependencies {
+  api "com.badlogicgames.gdx:gdx:$gdxVersion"
 }

@@ -1,41 +1,41 @@
-# Jogo Handgrip
+# Jogo do Balão
 
-Jogo sério para reabilitação da força de preensão da mão, feito com libGDX e controlado
-por um handgrip adaptado ligado a um Arduino pela porta serial.
+Jogo sério para reabilitação da força de preensão da mão, feito com libGDX.
+O jogador segura a barra de ESPAÇO para "apertar": quanto mais tempo apertando, mais o balão sobe.
 
 Autora: Beatriz Soares — disciplina de Jogos Digitais.
 
-## Como executar
+## Requisitos
 
-Requer Java 17 ou superior.
+- JDK 17 ou superior (testado com 17, 21 e 25).
+- VS Code com as extensões **Extension Pack for Java** e **Gradle for Java**
+  (o VS Code sugere as duas ao abrir a pasta).
+
+## Como executar no VS Code
+
+1. Abra a pasta do projeto (a que contém `settings.gradle`) com **Arquivo > Abrir Pasta**.
+2. Aguarde a importação do Gradle terminar (barra de status embaixo). Na primeira vez ele baixa
+   as dependências, então é preciso internet.
+3. Pressione **F5** e escolha **Rodar o jogo**, ou use **Terminal > Executar Tarefa de Build**
+   (Ctrl+Shift+B), que roda `gradlew lwjgl3:run`.
+
+Se algo der errado depois de trocar de JDK, use **Ctrl+Shift+P > Java: Clean Java Language Server Workspace**.
+
+## Pelo terminal
 
 ```bash
-./gradlew lwjgl3:run                      # com o handgrip
-cd # sem o dispositivo (segure ESPAÇO)
-./gradlew lwjgl3:jar                      # gera lwjgl3/build/libs/JogoHandgrip.jar
+./gradlew lwjgl3:run   # roda o jogo (no Windows: gradlew.bat lwjgl3:run)
+./gradlew lwjgl3:jar   # gera lwjgl3/build/libs/JogoBalao.jar
 ```
 
-No Windows use `gradlew.bat` no lugar de `./gradlew`. Para listar as portas seriais
-disponíveis, execute a classe `br.mackenzie.input.SerialPortLister`.
+## Controles
 
-## Configuração do handgrip
-
-Edite `assets/controle.properties` (ou coloque uma cópia ao lado do `.jar`):
-
-| Chave       | Significado                                                       |
-|-------------|-------------------------------------------------------------------|
-| `porta`     | Porta serial (`COM3`, `/dev/ttyUSB0`...) ou `auto`                |
-| `baud`      | Velocidade da serial (padrão 9600)                                |
-| `forcaMin`  | Valor enviado pelo Arduino com a mão solta                        |
-| `forcaMax`  | Valor enviado com a força máxima desejada                         |
-| `simulador` | `true` para usar o teclado no lugar do handgrip (só para testes)  |
-
-O Arduino deve enviar uma linha por leitura contendo um número, por exemplo `512` ou
-`Forca: 512`. Um esboço está em `firmware/handgrip/handgrip.ino`.
+- **ESPAÇO**: apertar (o balão sobe); soltar faz o balão descer.
+- **ESC** ou botão **Pausar**: pausa, com opções Continuar, Reiniciar e Menu principal.
 
 ## Estrutura
 
 - `core/.../ReabilitacaoGame.java` — classe principal e recursos compartilhados.
-- `core/.../screens/` — menu principal e tela de jogo (com pausa e reinício).
-- `core/.../input/` — leitura serial do handgrip, simulador e configuração.
+- `core/.../screens/` — menu principal e tela de jogo.
+- `core/.../input/` — leitura do aperto (barra de espaço).
 - `lwjgl3/` — inicializador desktop.

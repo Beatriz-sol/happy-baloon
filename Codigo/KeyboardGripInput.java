@@ -4,18 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
 /**
- * Simula o handgrip pelo teclado (segurar ESPAÇO = apertar).
- * Serve só para desenvolver sem o dispositivo; a versão entregue usa o handgrip.
+ * Simula o aperto pelo teclado: segurar ESPAÇO aumenta a força e soltar diminui.
  */
-public class SimulatedGripInput implements GripInput {
+public class KeyboardGripInput implements GripInput {
     private static final float SQUEEZE_RATE = 1.2f; // força por segundo ao apertar
     private static final float RELEASE_RATE = 1.6f; // força por segundo ao soltar
 
     private float force;
-
-    @Override
-    public void start() {
-    }
 
     @Override
     public void update(float delta) {
@@ -29,19 +24,5 @@ public class SimulatedGripInput implements GripInput {
     @Override
     public float getForce() {
         return force;
-    }
-
-    @Override
-    public boolean isConnected() {
-        return true;
-    }
-
-    @Override
-    public String getStatus() {
-        return "Simulador (segure ESPAÇO)";
-    }
-
-    @Override
-    public void dispose() {
     }
 }

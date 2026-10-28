@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Rodar o jogo",
+      "request": "launch",
+      "mainClass": "br.mackenzie.lwjgl3.Lwjgl3Launcher",
+      "projectName": "lwjgl3",
+      "cwd": "${workspaceFolder}/assets"
+    }
+  ]
+}

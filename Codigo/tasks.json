@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Rodar o jogo (Gradle)",
+      "type": "shell",
+      "command": "./gradlew lwjgl3:run",
+      "windows": { "command": ".\\gradlew.bat lwjgl3:run" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Gerar executável (.jar)",
+      "type": "shell",
+      "command": "./gradlew lwjgl3:jar",
+      "windows": { "command": ".\\gradlew.bat lwjgl3:jar" },
+      "problemMatcher": []
+    }
+  ]
+}
