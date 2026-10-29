@@ -1,0 +1,20 @@
+{
+  "name": "Jogo do Balão",
+  "image": "mcr.microsoft.com/devcontainers/java:1-21-bookworm",
+  "features": {
+    // Área de trabalho acessível pelo navegador (noVNC), para ver a janela do jogo
+    "ghcr.io/devcontainers/features/desktop-lite:1": {}
+  },
+  "forwardPorts": [6080],
+  "portsAttributes": {
+    "6080": { "label": "Tela do jogo", "onAutoForward": "openBrowser" }
+  },
+  "containerEnv": { "DISPLAY": ":1" },
+  // OpenGL por software (Mesa), necessário para o libGDX abrir a janela
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libgl1-mesa-dri libxrandr2 libxcursor1 libxi6 libxxf86vm1 && chmod +x gradlew",
+  "customizations": {
+    "vscode": {
+      "extensions": ["vscjava.vscode-java-pack", "vscjava.vscode-gradle"]
+    }
+  }
+}

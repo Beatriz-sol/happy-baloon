@@ -2,6 +2,8 @@ package br.mackenzie.screens;
 
 import br.mackenzie.ReabilitacaoGame;
 import br.mackenzie.world.Balloon;
+import br.mackenzie.world.Course;
+import br.mackenzie.world.CourseItem;
 import br.mackenzie.world.LevelConfig;
 import br.mackenzie.world.ParallaxBackground;
 import com.badlogic.gdx.Gdx;
@@ -11,7 +13,9 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -25,7 +29,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
  * Tela de jogo: a altura do balão segue a força do aperto e o jogador
- * tenta manter o balão dentro das faixas-alvo da fase.
+ * tenta manter o balão dentro das faixas-alvo da fase, pegando moedas
+ * e desviando dos pássaros.
  */
 public class GameScreen extends ScreenAdapter {
     private static final float W = ReabilitacaoGame.WORLD_WIDTH;
@@ -47,12 +52,18 @@ public class GameScreen extends ScreenAdapter {
     private final Balloon balloon;
     private final ParallaxBackground background;
     private final LevelConfig level;
+    private final Course course;
+    private final Texture coinTexture;
+    private final Texture[] birdTextures;
+    private final Animation<TextureRegion> birdAnimation;
 
     private boolean paused;
     private boolean finished;
     private float distance;
     private float elapsedTime;
     private float timeInZone;
+    private int coins;
+    private int birdHits;
 
     public GameScreen(ReabilitacaoGame game) {
         this.game = game;
@@ -64,6 +75,17 @@ public class GameScreen extends ScreenAdapter {
         balloon = new Balloon(balloonTexture, BALLOON_X, BALLOON_MIN_Y, BALLOON_MAX_Y);
         background = new ParallaxBackground(W, H);
         level = LevelConfig.level1();
+        course = new Course(level, BALLOON_MIN_Y, BALLOON_MAX_Y, Balloon.ENVELOPE_OFFSET_Y);
+
+        coinTexture = new Texture("moeda.png");
+        coinTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        birdTextures = new Texture[] {new Texture("passaro1.png"), new Texture("passaro2.png")};
+        TextureRegion[] birdFrames = new TextureRegion[birdTextures.length];
+        for (int i = 0; i < birdTextures.length; i++) {
+            birdTextures[i].setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+            birdFrames[i] = new TextureRegion(birdTextures[i]);
+        }
+        birdAnimation = new Animation<>(0.15f, birdFrames);
 
         hudLabel = new Label("", game.skin);
         hudLabel.setPosition(15, H - 35);
@@ -131,6 +153,9 @@ public class GameScreen extends ScreenAdapter {
     private void restart() {
         balloon.reset();
         background.reset();
+        course.reset();
+        coins = 0;
+        birdHits = 0;
         distance = 0f;
         finished = false;
         messageLabel.setText("");
@@ -184,11 +209,40 @@ public class GameScreen extends ScreenAdapter {
             return;
         }
         if (level.segments[segment].contains(force)) timeInZone += delta;
+        checkCollisions();
 
         int zonePercent = elapsedTime > 0 ? Math.round(100f * timeInZone / elapsedTime) : 0;
         int progress = Math.round(100f * distance / level.totalLength());
-        hudLabel.setText(String.format("%s  %d%%   Força: %d%%   Na faixa-alvo: %d%%",
-            level.name, progress, Math.round(force * 100), zonePercent));
+        hudLabel.setText(String.format("%s  %d%%   Na faixa-alvo: %d%%   Moedas: %d   Pássaros: %d",
+            level.name, progress, zonePercent, coins, birdHits));
+    }
+
+    private void checkCollisions() {
+        float balloonY = balloon.getEnvelopeCenterY();
+        for (CourseItem item : course.getItems()) {
+            if (item.used) continue;
+            float x = screenX(item.distance);
+            if (Math.abs(x - BALLOON_CENTER_X) > Balloon.ENVELOPE_RADIUS + item.radius) continue;
+
+            float dx = x - BALLOON_CENTER_X;
+            float dy = item.y - balloonY;
+            float reach = Balloon.ENVELOPE_RADIUS + item.radius;
+            if (dx * dx + dy * dy > reach * reach) continue;
+
+            if (item.type == CourseItem.Type.COIN) {
+                item.used = true;
+                coins++;
+            } else if (!balloon.isHit()) {
+                item.used = true;
+                birdHits++;
+                balloon.hit();
+            }
+        }
+    }
+
+    /** Converte a distância de um item no percurso para a posição x na tela. */
+    private float screenX(float itemDistance) {
+        return BALLOON_CENTER_X + itemDistance - distance;
     }
 
     private void draw() {
@@ -209,8 +263,25 @@ public class GameScreen extends ScreenAdapter {
 
         batch.begin();
         background.drawGround(batch);
+        drawItems(batch);
         balloon.draw(batch);
         batch.end();
+    }
+
+    private void drawItems(SpriteBatch batch) {
+        TextureRegion birdFrame = birdAnimation.getKeyFrame(elapsedTime, true);
+        for (CourseItem item : course.getItems()) {
+            if (item.used) continue;
+            float x = screenX(item.distance);
+            if (x < -50f || x > W + 50f) continue;
+
+            if (item.type == CourseItem.Type.COIN) {
+                float size = item.radius * 2f;
+                batch.draw(coinTexture, x - item.radius, item.y - item.radius, size, size);
+            } else {
+                batch.draw(birdFrame, x - 24f, item.y - 16f, 48f, 32f);
+            }
+        }
     }
 
     // Faixas-alvo semitransparentes: alturas em que o balão fica com a força certa.
@@ -252,5 +323,7 @@ public class GameScreen extends ScreenAdapter {
         stage.dispose();
         balloonTexture.dispose();
         background.dispose();
+        coinTexture.dispose();
+        for (Texture texture : birdTextures) texture.dispose();
     }
 }
