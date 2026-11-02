@@ -1,0 +1,6 @@
+{
+  // O VS Code compila e roda o jogo direto, usando as bibliotecas da pasta libs.
+  "java.project.sourcePaths": ["core/src/main/java", "lwjgl3/src/main/java"],
+  "java.project.referencedLibraries": ["libs/**/*.jar"],
+  "java.project.outputPath": "bin"
+}

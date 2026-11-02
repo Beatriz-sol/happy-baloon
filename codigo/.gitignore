@@ -1,0 +1,7 @@
+bin/
+out/
+fontes.txt
+.idea/workspace.xml
+.idea/shelf/
+.DS_Store
+log-do-jogo.txt

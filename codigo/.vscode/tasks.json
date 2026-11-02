@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Ctrl+Shift+B: compila e abre o jogo pelo rodar.bat (não depende da extensão Java)
+      "label": "Rodar o jogo",
+      "type": "shell",
+      "command": "./rodar.sh",
+      "windows": { "command": ".\\rodar.bat" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}

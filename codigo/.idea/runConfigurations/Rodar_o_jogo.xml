@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Rodar o jogo" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="br.mackenzie.lwjgl3.Lwjgl3Launcher" />
+    <module name="jogo-balao" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/assets" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
