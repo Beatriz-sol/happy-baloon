@@ -16,7 +16,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
- * Menu principal: iniciar o jogo, escolher a fase, sair e testar o aperto.
+ * Menu principal: iniciar o jogo, escolher a fase, ver o histórico, ligar o som e testar o aperto.
  */
 public class MenuScreen extends ScreenAdapter {
     private final ReabilitacaoGame game;
@@ -32,6 +32,7 @@ public class MenuScreen extends ScreenAdapter {
         stage.addActor(table);
 
         TextButton startButton = new TextButton("Iniciar", game.skin);
+        TextButton historyButton = new TextButton("Histórico", game.skin);
         TextButton exitButton = new TextButton("Sair", game.skin);
         statusLabel = new Label("Segure ESPAÇO para apertar", game.skin);
 
@@ -46,16 +47,43 @@ public class MenuScreen extends ScreenAdapter {
         table.add(startButton).width(260).height(55).padBottom(12).row();
         table.add(new Label("ou escolha a fase:", game.skin, "small")).padBottom(6).row();
         table.add(levelButtons).padBottom(12).row();
-        table.add(exitButton).width(260).height(55).padBottom(25).row();
+        Table bottomButtons = new Table();
+        bottomButtons.add(historyButton).width(170).height(50).padRight(10);
+        bottomButtons.add(exitButton).width(170).height(50);
+        table.add(bottomButtons).padBottom(25).row();
+
+        TextButton soundButton = new TextButton(soundText(), game.skin);
+        soundButton.setBounds(ReabilitacaoGame.WORLD_WIDTH - 185, ReabilitacaoGame.WORLD_HEIGHT - 50, 170, 40);
+        stage.addActor(soundButton);
+        soundButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                game.sounds.setEnabled(!game.sounds.isEnabled());
+                soundButton.setText(soundText());
+            }
+        });
         table.add(statusLabel).padBottom(40).row();
 
         startLevelOnClick(startButton, 0);
+        historyButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Gdx.app.postRunnable(() -> {
+                    game.setScreen(new HistoryScreen(game));
+                    dispose();
+                });
+            }
+        });
         exitButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 Gdx.app.exit();
             }
         });
+    }
+
+    private String soundText() {
+        return game.sounds.isEnabled() ? "Som: ligado" : "Som: desligado";
     }
 
     private void startLevelOnClick(TextButton button, int levelIndex) {

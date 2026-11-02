@@ -15,6 +15,7 @@ public class StarsActor extends Actor {
     private final int stars;
     private final float radius;
     private final float revealDelay;
+    private Runnable onStarRevealed;
     private float time;
 
     public StarsActor(ShapeRenderer shapes, int stars, float radius, float spacing, float revealDelay) {
@@ -25,10 +26,23 @@ public class StarsActor extends Actor {
         setSize(spacing * TOTAL, radius * 2f);
     }
 
+    /** Chamado cada vez que uma estrela ganha acende (por exemplo, para tocar um som). */
+    public void setOnStarRevealed(Runnable onStarRevealed) {
+        this.onStarRevealed = onStarRevealed;
+    }
+
     @Override
     public void act(float delta) {
         super.act(delta);
+        int before = revealedStars();
         time += delta;
+        if (onStarRevealed != null && revealedStars() > before) onStarRevealed.run();
+    }
+
+    private int revealedStars() {
+        int revealed = 0;
+        while (revealed < stars && time >= revealDelay * (revealed + 1)) revealed++;
+        return revealed;
     }
 
     @Override
@@ -39,8 +53,9 @@ public class StarsActor extends Actor {
         shapes.setTransformMatrix(batch.getTransformMatrix());
         shapes.begin(ShapeRenderer.ShapeType.Filled);
         float spacing = getWidth() / TOTAL;
+        int revealed = revealedStars();
         for (int i = 0; i < TOTAL; i++) {
-            boolean earned = i < stars && time >= revealDelay * (i + 1);
+            boolean earned = i < revealed;
             Stars.draw(shapes, getX() + spacing * (i + 0.5f), getY() + getHeight() / 2f, radius,
                 earned ? Stars.GOLD : Stars.EMPTY);
         }

@@ -1,6 +1,7 @@
 package br.mackenzie.screens;
 
 import br.mackenzie.ReabilitacaoGame;
+import br.mackenzie.audio.SoundEffects;
 import br.mackenzie.metrics.LevelResult;
 import br.mackenzie.ui.StarsActor;
 import br.mackenzie.world.LevelConfig;
@@ -13,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import java.util.Locale;
@@ -24,6 +26,7 @@ import java.util.Locale;
 public class ResultScreen extends ScreenAdapter {
     private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
     private static final Color HIGHLIGHT = new Color(1f, 0.85f, 0.3f, 1f);
+    private static final Color CAPTION = new Color(0.7f, 0.75f, 0.85f, 1f);
 
     private final ReabilitacaoGame game;
     private final LevelResult result;
@@ -39,8 +42,13 @@ public class ResultScreen extends ScreenAdapter {
         stage.addActor(table);
 
         table.add(new Label(result.levelName + " concluída!", game.skin, "title")).padBottom(10).row();
-        table.add(new StarsActor(game.shapes, result.stars, 28f, 80f, 0.4f)).padBottom(10).row();
-        table.add(new Label(messageFor(result.stars), game.skin)).padBottom(18).row();
+        StarsActor stars = new StarsActor(game.shapes, result.stars, 28f, 80f, 0.4f);
+        stars.setOnStarRevealed(() -> game.sounds.play(SoundEffects.Effect.STAR));
+        table.add(stars).padBottom(10).row();
+        table.add(new Label(messageFor(result.stars), game.skin)).padBottom(4).row();
+        Label comparison = new Label(comparisonText(), game.skin, "small");
+        comparison.setColor(CAPTION);
+        table.add(comparison).padBottom(14).row();
 
         Table columns = new Table();
         columns.add(buildStats()).top().padRight(50);
@@ -65,7 +73,16 @@ public class ResultScreen extends ScreenAdapter {
         stats.add(new Label(value, game.skin, "small")).right().row();
     }
 
-    // Último resultado de cada fase nesta sessão, para comparar consistência e tempo de resposta entre as fases
+    // A partida atual já está no histórico; a anterior desta fase é a penúltima
+    private String comparisonText() {
+        Array<LevelResult> attempts = game.history.forLevel(result.levelIndex);
+        if (attempts.size < 2) return "Primeira partida registrada nesta fase.";
+        LevelResult previous = attempts.get(attempts.size - 2);
+        return String.format(PT_BR, "Partida anterior: %d%% na faixa e %.1f s de resposta",
+            Math.round(100f * previous.consistency), previous.averageResponseTime);
+    }
+
+    // Última partida de cada fase (do histórico salvo), para comparar consistência e tempo de resposta entre as fases
     private Table buildEvolution() {
         Table evolution = new Table();
         evolution.defaults().padRight(18);
@@ -76,7 +93,7 @@ public class ResultScreen extends ScreenAdapter {
         evolution.row();
 
         for (int index = 0; index < LevelConfig.COUNT; index++) {
-            LevelResult last = lastResultFor(index);
+            LevelResult last = game.history.lastFor(index);
             Color color = index == result.levelIndex ? HIGHLIGHT : Color.WHITE;
             evolution.add(smallLabel("Fase " + (index + 1), color)).left();
             if (last == null) {
@@ -92,13 +109,6 @@ public class ResultScreen extends ScreenAdapter {
             evolution.add(new StarsActor(game.shapes, last.stars, 8f, 20f, 0f)).left().row();
         }
         return evolution;
-    }
-
-    private LevelResult lastResultFor(int levelIndex) {
-        for (int i = game.sessionResults.size - 1; i >= 0; i--) {
-            if (game.sessionResults.get(i).levelIndex == levelIndex) return game.sessionResults.get(i);
-        }
-        return null;
     }
 
     private Label smallLabel(String text, Color color) {

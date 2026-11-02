@@ -1,8 +1,9 @@
 package br.mackenzie;
 
+import br.mackenzie.audio.SoundEffects;
 import br.mackenzie.input.GripInput;
 import br.mackenzie.input.KeyboardGripInput;
-import br.mackenzie.metrics.LevelResult;
+import br.mackenzie.metrics.History;
 import br.mackenzie.screens.MenuScreen;
 import br.mackenzie.ui.UiSkin;
 import com.badlogic.gdx.Game;
@@ -10,7 +11,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.Array;
 
 /**
  * Classe principal: guarda os recursos compartilhados entre as telas.
@@ -23,8 +23,9 @@ public class ReabilitacaoGame extends Game {
     public ShapeRenderer shapes;
     public Skin skin;
     public GripInput grip;
-    /** Resultados das fases jogadas desde que o jogo foi aberto, para mostrar a evolução. */
-    public final Array<LevelResult> sessionResults = new Array<>();
+    public SoundEffects sounds;
+    /** Todas as partidas já jogadas, salvas em arquivo para mostrar a evolução. */
+    public History history;
 
     @Override
     public void create() {
@@ -33,6 +34,8 @@ public class ReabilitacaoGame extends Game {
         skin = UiSkin.create();
 
         grip = new KeyboardGripInput();
+        sounds = new SoundEffects();
+        history = new History();
 
         setScreen(new MenuScreen(this));
     }
@@ -49,5 +52,6 @@ public class ReabilitacaoGame extends Game {
         batch.dispose();
         shapes.dispose();
         skin.dispose();
+        sounds.dispose();
     }
 }

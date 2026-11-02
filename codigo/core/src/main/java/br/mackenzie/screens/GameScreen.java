@@ -1,6 +1,7 @@
 package br.mackenzie.screens;
 
 import br.mackenzie.ReabilitacaoGame;
+import br.mackenzie.audio.SoundEffects;
 import br.mackenzie.metrics.LevelResult;
 import br.mackenzie.metrics.MetricsTracker;
 import br.mackenzie.world.Balloon;
@@ -22,6 +23,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -57,6 +59,8 @@ public class GameScreen extends ScreenAdapter {
     private static final float GAUGE_TOP = 380f;
     private static final Color GAUGE_IN_ZONE = new Color(0.3f, 0.75f, 0.35f, 1f);
     private static final Color GAUGE_OUT_OF_ZONE = new Color(0.95f, 0.6f, 0.2f, 1f);
+    private static final Color GAIN_COLOR = new Color(1f, 0.9f, 0.3f, 1f);
+    private static final Color LOSS_COLOR = new Color(1f, 0.35f, 0.3f, 1f);
 
     private final ReabilitacaoGame game;
     private final int levelIndex;
@@ -79,6 +83,7 @@ public class GameScreen extends ScreenAdapter {
     private boolean finished;
     private boolean leaving;
     private float countdown;
+    private int countdownShown; // número da contagem na tela, para tocar o bipe só quando ele muda
     private float goMessageTimer;
     private float finishTimer;
     private float distance;
@@ -182,6 +187,7 @@ public class GameScreen extends ScreenAdapter {
         animationTime = 0f;
         finished = false;
         countdown = COUNTDOWN_SECONDS;
+        countdownShown = 0;
         goMessageTimer = 0f;
         finishTimer = 0f;
         messageLabel.setText(String.valueOf((int) COUNTDOWN_SECONDS));
@@ -224,12 +230,16 @@ public class GameScreen extends ScreenAdapter {
 
         // Contagem inicial: o balão já responde ao aperto, mas a fase ainda não começou
         if (countdown > 0f) {
-            countdown -= delta;
-            if (countdown > 0f) {
-                messageLabel.setText(String.valueOf((int) Math.ceil(countdown)));
-                return;
+            int number = (int) Math.ceil(countdown);
+            if (number != countdownShown) {
+                countdownShown = number;
+                messageLabel.setText(String.valueOf(number));
+                game.sounds.play(SoundEffects.Effect.COUNTDOWN);
             }
+            countdown -= delta;
+            if (countdown > 0f) return;
             messageLabel.setText("Já!");
+            game.sounds.play(SoundEffects.Effect.GO);
             goMessageTimer = GO_MESSAGE_SECONDS;
         }
         if (finished) {
@@ -251,6 +261,7 @@ public class GameScreen extends ScreenAdapter {
             finished = true;
             metrics.finish();
             messageLabel.setText("Percurso concluído!");
+            game.sounds.play(SoundEffects.Effect.FINISH);
             updateHud();
             return;
         }
@@ -265,7 +276,7 @@ public class GameScreen extends ScreenAdapter {
         int totalCoins = course.getCoinCount();
         LevelResult result = new LevelResult(levelIndex, level.name, metrics,
             MetricsTracker.maxScore(level, totalCoins), totalCoins);
-        game.sessionResults.add(result);
+        game.history.add(result);
         Gdx.app.postRunnable(() -> {
             game.setScreen(new ResultScreen(game, result));
             dispose();
@@ -296,12 +307,27 @@ public class GameScreen extends ScreenAdapter {
             if (item.type == CourseItem.Type.COIN) {
                 item.used = true;
                 metrics.addCoin();
+                game.sounds.play(SoundEffects.Effect.COIN);
+                showFloatingPoints(MetricsTracker.POINTS_PER_COIN, x, item.y, GAIN_COLOR);
             } else if (!balloon.isHit()) {
                 item.used = true;
                 metrics.addBirdHit();
                 balloon.hit();
+                game.sounds.play(SoundEffects.Effect.BIRD);
+                showFloatingPoints(MetricsTracker.POINTS_PER_BIRD_HIT, x, item.y, LOSS_COLOR);
             }
         }
+    }
+
+    // Os pontos ganhos ou perdidos sobem e somem no lugar da colisão
+    private void showFloatingPoints(int points, float x, float y, Color color) {
+        Label label = new Label((points > 0 ? "+" : "") + points, game.skin);
+        label.setColor(color);
+        label.setPosition(x - label.getPrefWidth() / 2f, y);
+        label.addAction(Actions.sequence(
+            Actions.parallel(Actions.moveBy(0f, 40f, 0.8f), Actions.fadeOut(0.8f)),
+            Actions.removeActor()));
+        stage.getRoot().addActorBefore(pauseTable, label); // fica atrás do menu de pausa
     }
 
     /** Converte a distância de um item no percurso para a posição x na tela. */
