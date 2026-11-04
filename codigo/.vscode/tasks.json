@@ -9,6 +9,14 @@
       "windows": { "command": ".\\rodar.bat" },
       "group": { "kind": "build", "isDefault": true },
       "problemMatcher": []
+    },
+    {
+      // Terminal > Executar Tarefa > Gerar o .jar: cria codigo/dist/JogoBalao.jar
+      "label": "Gerar o .jar",
+      "type": "shell",
+      "command": "./gerar-jar.sh",
+      "windows": { "command": ".\\gerar-jar.bat" },
+      "problemMatcher": []
     }
   ]
 }

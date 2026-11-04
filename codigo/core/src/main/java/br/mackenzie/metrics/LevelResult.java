@@ -5,12 +5,14 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Resultado de uma fase concluída. As estrelas vêm da fração da pontuação
- * máxima possível, então valem igual em qualquer fase.
+ * máxima possível, então valem igual em qualquer fase. Os limites foram
+ * ajustados com partidas simuladas: três estrelas exigem ficar quase o tempo
+ * todo na faixa-alvo, e não só pegar as moedas.
  */
 public class LevelResult {
-    private static final float ONE_STAR = 0.4f;
-    private static final float TWO_STARS = 0.6f;
-    private static final float THREE_STARS = 0.8f;
+    private static final float ONE_STAR = 0.5f;
+    private static final float TWO_STARS = 0.7f;
+    private static final float THREE_STARS = 0.88f;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public final String playedAt;  // data e hora da partida, "aaaa-mm-dd hh:mm"

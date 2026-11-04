@@ -53,7 +53,11 @@ public class HistoryScreen extends ScreenAdapter {
             table.add(buildSummary()).padBottom(4).row();
             table.add(caption("Na faixa e Resposta: primeira partida / última partida")).padBottom(8).row();
         }
-        table.add(caption("Arquivo: " + game.history.getFilePath())).padBottom(10).row();
+        // Caminhos longos quebram em mais de uma linha em vez de sair da tela
+        Label path = caption("Arquivo: " + game.history.getFilePath());
+        path.setWrap(true);
+        path.setAlignment(Align.center);
+        table.add(path).width(ReabilitacaoGame.WORLD_WIDTH - 40).padBottom(10).row();
 
         TextButton backButton = new TextButton("Voltar", game.skin);
         table.add(backButton).width(200).height(45);

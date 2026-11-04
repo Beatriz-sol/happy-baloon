@@ -1,8 +1,7 @@
 package br.mackenzie;
 
 import br.mackenzie.audio.SoundEffects;
-import br.mackenzie.input.GripInput;
-import br.mackenzie.input.KeyboardGripInput;
+import br.mackenzie.input.GripManager;
 import br.mackenzie.metrics.History;
 import br.mackenzie.screens.MenuScreen;
 import br.mackenzie.ui.UiSkin;
@@ -22,7 +21,8 @@ public class ReabilitacaoGame extends Game {
     public SpriteBatch batch;
     public ShapeRenderer shapes;
     public Skin skin;
-    public GripInput grip;
+    /** Força do aperto: handgrip com Arduino quando conectado, senão a barra de ESPAÇO. */
+    public GripManager grip;
     public SoundEffects sounds;
     /** Todas as partidas já jogadas, salvas em arquivo para mostrar a evolução. */
     public History history;
@@ -33,7 +33,7 @@ public class ReabilitacaoGame extends Game {
         shapes = new ShapeRenderer();
         skin = UiSkin.create();
 
-        grip = new KeyboardGripInput();
+        grip = new GripManager();
         sounds = new SoundEffects();
         history = new History();
 
@@ -53,5 +53,6 @@ public class ReabilitacaoGame extends Game {
         shapes.dispose();
         skin.dispose();
         sounds.dispose();
+        grip.dispose();
     }
 }

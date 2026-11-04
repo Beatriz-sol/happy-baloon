@@ -16,7 +16,8 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
- * Menu principal: iniciar o jogo, escolher a fase, ver o histórico, ligar o som e testar o aperto.
+ * Menu principal: iniciar o jogo, escolher a fase, ver o histórico, ligar o som,
+ * configurar o Arduino e testar o aperto.
  */
 public class MenuScreen extends ScreenAdapter {
     private final ReabilitacaoGame game;
@@ -34,7 +35,7 @@ public class MenuScreen extends ScreenAdapter {
         TextButton startButton = new TextButton("Iniciar", game.skin);
         TextButton historyButton = new TextButton("Histórico", game.skin);
         TextButton exitButton = new TextButton("Sair", game.skin);
-        statusLabel = new Label("Segure ESPAÇO para apertar", game.skin);
+        statusLabel = new Label(game.grip.getStatusText(), game.skin, "small");
 
         Table levelButtons = new Table();
         for (int i = 0; i < LevelConfig.COUNT; i++) {
@@ -51,6 +52,24 @@ public class MenuScreen extends ScreenAdapter {
         bottomButtons.add(historyButton).width(170).height(50).padRight(10);
         bottomButtons.add(exitButton).width(170).height(50);
         table.add(bottomButtons).padBottom(25).row();
+
+        Label credits = new Label("Beatriz Soares - Jogos Digitais", game.skin, "small");
+        credits.setColor(0.6f, 0.65f, 0.75f, 1f);
+        credits.setPosition(12, 10);
+        stage.addActor(credits);
+
+        TextButton arduinoButton = new TextButton("Arduino", game.skin);
+        arduinoButton.setBounds(15, ReabilitacaoGame.WORLD_HEIGHT - 50, 140, 40);
+        stage.addActor(arduinoButton);
+        arduinoButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                Gdx.app.postRunnable(() -> {
+                    game.setScreen(new ArduinoScreen(game));
+                    dispose();
+                });
+            }
+        });
 
         TextButton soundButton = new TextButton(soundText(), game.skin);
         soundButton.setBounds(ReabilitacaoGame.WORLD_WIDTH - 185, ReabilitacaoGame.WORLD_HEIGHT - 50, 170, 40);
@@ -107,6 +126,7 @@ public class MenuScreen extends ScreenAdapter {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0.08f, 0.12f, 0.22f, 1f);
+        statusLabel.setText(game.grip.getStatusText());
         stage.act(delta);
         stage.draw();
         drawForceBar();
