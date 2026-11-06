@@ -16,6 +16,7 @@ Autora: Beatriz Soares — disciplina de Jogos Digitais.
 | Short paper | [`docs/short-paper-jogo-do-balao.pdf`](docs/short-paper-jogo-do-balao.pdf) |
 | Prints do jogo | [`docs/prints/`](docs/prints) |
 | Códigos do Arduino | `codigo/arduino/` |
+| Montagem do Arduino | [`docs/montagem-handgrip-arduino-fsr402.pdf`](docs/montagem-handgrip-arduino-fsr402.pdf) |
 
 ![Fluxo de dados do handgrip ao histórico](docs/diagrama-fluxo.png)
 
@@ -24,7 +25,7 @@ Autora: Beatriz Soares — disciplina de Jogos Digitais.
 ```
 README.md   este arquivo
 codigo/     projeto libGDX completo, pronto para abrir no VS Code ou no IntelliJ
-docs/       short paper em PDF, prints do jogo e diagrama do sistema
+docs/       short paper, guia de montagem do Arduino, prints e diagrama do sistema
 ```
 
 O projeto não usa Gradle: as bibliotecas do libGDX já vêm na pasta `codigo/libs`,
@@ -68,8 +69,9 @@ O Ctrl+Shift+B funciona mesmo sem a extensão carregada.
 
 ## Handgrip com Arduino (controle IoT)
 
-O dispositivo é um handgrip de mola com um sensor de força FSR 406 colado no cabo, ligado a um
-Arduino Uno: 5V → FSR → pino A0 → resistor de 10 kΩ → GND. O Arduino lê o sensor e manda linhas
+O dispositivo é um handgrip de mola com um sensor de força FSR 402 colado no cabo, ligado a uma
+placa UNO R3: 5V → FSR → pino A0 → resistor de 10 kΩ → GND. O passo a passo da montagem na
+protoboard, com desenho, está em [`docs/montagem-handgrip-arduino-fsr402.pdf`](docs/montagem-handgrip-arduino-fsr402.pdf). O Arduino lê o sensor e manda linhas
 `Forca: N` (N de 0 a 1023) pela USB, a 9600 baud. Os códigos do Arduino estão em `codigo/arduino/`:
 `handgrip_fsr` (sensor FSR), `handgrip_hx711` (alternativa com célula de carga e módulo HX711)
 e `teste_sem_sensor` (para testar a conexão antes de montar o sensor).
@@ -158,7 +160,7 @@ por síntese com o script `codigo/ferramentas/gerar_sons.py`, então não depend
 - `codigo/ferramentas/` — script que gera os efeitos sonoros.
 - `codigo/libs/` — bibliotecas do libGDX 1.13.1, do LWJGL 3.3.3 e do jSerialComm 2.11.0 (porta serial).
 - `codigo/arduino/` — códigos do Arduino do handgrip e o teste sem sensor.
-- `docs/` — short paper, prints e diagrama do fluxo de dados.
+- `docs/` — short paper, guia de montagem do Arduino, prints e diagrama do fluxo de dados.
 - `codigo/rodar.bat` e `codigo/rodar.sh` — compilam e rodam o jogo.
 - `codigo/gerar-jar.bat` e `codigo/gerar-jar.sh` — geram o executável `dist/JogoBalao.jar`.
 
