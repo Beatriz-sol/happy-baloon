@@ -1,11 +1,11 @@
 # Jogo do Balão
 
-Jogo sério para reabilitação da força de preensão da mão, feito com libGDX.
+Jogo para reabilitação da força de preensão da mão, feito com libGDX.
 O jogador aperta um **handgrip com sensor de força ligado a um Arduino**: quanto mais força, mais o balão sobe.
 O objetivo é manter o balão dentro das faixas-alvo, pegando moedas e desviando dos pássaros.
 Sem o Arduino, a barra de ESPAÇO simula o aperto, para testes.
 
-Autora: Beatriz Soares — disciplina de Jogos Digitais.
+Autora: Beatriz Soares - 10443916
 
 ## Entrega
 
@@ -35,7 +35,6 @@ então não é preciso baixar nada para rodar. Só é preciso o **JDK 17 ou mais
 ## Jeito mais simples: rodar.bat
 
 Dê dois cliques em **`codigo/rodar.bat`** (Windows). Ele compila o código e abre o jogo.
-No Linux ou macOS, rode `./rodar.sh` dentro da pasta `codigo`.
 
 ## Executável (.jar)
 
